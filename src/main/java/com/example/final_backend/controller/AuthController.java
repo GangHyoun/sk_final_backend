@@ -39,4 +39,6 @@ public class AuthController {
         return ResponseEntity.ok("사용 가능한 ID입니다.");
     }
 
+    // 로그아웃
+
 }
