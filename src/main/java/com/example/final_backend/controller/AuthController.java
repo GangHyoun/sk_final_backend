@@ -40,5 +40,13 @@ public class AuthController {
     }
 
     // 로그아웃
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout() {
+        // 클라이언트 측에서 토큰 삭제를 유도하기 위한 응답 헤더 추가
+        return ResponseEntity.ok()
+                .header("Authorization", "") // 토큰 값 초기화
+                .header("Cache-Control", "no-store") // 캐시 비활성화
+                .body("로그아웃 성공");
+    }
 
 }
