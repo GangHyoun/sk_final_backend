@@ -13,7 +13,8 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**").permitAll()  // 로그인, 회원가입 허용
+                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/test-redis/**").permitAll()// 로그인, 회원가입 허용
                         .anyRequest().authenticated()            // 나머지는 인증 필요
                 )
                 .addFilterBefore(new JwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)

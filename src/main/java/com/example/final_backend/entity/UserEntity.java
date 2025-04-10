@@ -60,6 +60,6 @@ public class UserEntity {
     private PenaltyCountEntity penaltyCount;
 
     // 제한된 사용자 1대1 양방향 연결
-    @OneToOne(mappedBy = "userId", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private UserLimitsEntity limits;
 }
