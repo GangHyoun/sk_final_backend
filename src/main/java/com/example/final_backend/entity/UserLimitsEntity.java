@@ -15,9 +15,12 @@ import java.time.LocalDateTime;
 public class UserLimitsEntity {
     // 제한된 사용자
     @Id
+    private int userId;
+
     @OneToOne
-    @JoinColumn(name = "users")
-    private UserEntity userId;
+    @MapsId
+    @JoinColumn(name = "userId")
+    private UserEntity user;
 
     // 제한 시작 일자
     private LocalDateTime startDate;

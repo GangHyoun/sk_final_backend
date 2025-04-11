@@ -6,9 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+//user정보를 가져오는 user레파지토리도 여기서 사용
 @Repository
 public interface AuthRepository extends JpaRepository<UserEntity, Integer> {
     Optional<UserEntity> findByEmail(String email);
     Optional<UserEntity> findById(String id);
-    Optional<UserEntity> findByUsername(String username);
 }

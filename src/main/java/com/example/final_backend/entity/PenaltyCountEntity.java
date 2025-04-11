@@ -15,10 +15,12 @@ import java.time.LocalDate;
 public class PenaltyCountEntity {
     // 사용자 식별 번호
     @Id
+    private int userId;
+
     @OneToOne
     @MapsId
-    @JoinColumn(name="users", insertable = false, updatable = false)
-    private UserEntity userId;
+    @JoinColumn(name = "userId")
+    private UserEntity user;
 
     // 패널티 횟수 기록
     private int penaltyCount;
