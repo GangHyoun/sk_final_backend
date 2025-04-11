@@ -62,4 +62,15 @@ public class UserEntity {
     // 제한된 사용자 1대1 양방향 연결
     @OneToOne(mappedBy = "userId", cascade = CascadeType.ALL)
     private UserLimitsEntity limits;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 }

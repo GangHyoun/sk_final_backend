@@ -45,6 +45,12 @@ dependencies {
     testImplementation 'io.projectreactor:reactor-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    //validation 추가
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // 레디스 인사이트 추가
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 }
 
 tasks.named('test') {

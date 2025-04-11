@@ -46,4 +46,20 @@ public class PostEntity {
     @OneToMany(mappedBy = "postId", cascade = CascadeType.ALL)
     private List<CommentEntity> comment;
 
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void incrementCount() {
+        this.count++;
+    }
+
 }
