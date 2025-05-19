@@ -35,6 +35,9 @@ public class PostService {
     private final UserService userService;
     private final ServerToProxyJwtService serverToProxyJwtService;
     private final CommentRepository commentRepository;
+    String serverJwt;
+    String jsonBody;
+    String entity;
 
 
     @Value("${proxy.server.url}")
@@ -47,46 +50,33 @@ public class PostService {
     // 욕설 필터링 함수 (FastAPI 호출)
     private String getFilteredText(String text, UserEntity user, PostEntity post) {
         try {
-            System.out.println("📤 FastAPI로 전송할 텍스트 (게시글): " + text);
-
-            // 1. 본문 데이터 준비
             Map<String, String> body = new HashMap<>();
             body.put("text", text);
 
-            // 2. JWT 생성 (서버-프록시용)
             String jsonBody = serverToProxyJwtService.createJsonBody(body);
             String serverJwt = serverToProxyJwtService.generateTokenFromJson(jsonBody);
 
-            // 3. 헤더 세팅
+            System.out.println("📡 [프록시 호출] URL: " + gatewayUrl);
+            System.out.println("📡 [프록시 호출] 바디: " + jsonBody);
+            System.out.println("📡 [프록시 호출] JWT: " + serverJwt);
+            System.out.println("📡 [프록시 호출] API KEY: " + clientApiKey);
+
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-
-            // API Key + JWT 둘 다 헤더에 추가
-            headers.set("Authorization", "Bearer " + clientApiKey);  // 클라이언트용 API Key
-            headers.set("X-Auth-Token", serverJwt);                  // 서버-프록시 JWT
+            headers.set("Authorization", "Bearer " + clientApiKey);
+            headers.set("X-Auth-Token", serverJwt);
 
             HttpEntity<String> entity = new HttpEntity<>(jsonBody, headers);
 
-            // 4. 프록시 서버 호출
-            ResponseEntity<Map> response = purgoRestTemplate.postForEntity(
-                    gatewayUrl, entity, Map.class);
+            ResponseEntity<Map> response = purgoRestTemplate.postForEntity(gatewayUrl, entity, Map.class);
 
-            // 5. 응답 처리
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
                 Map<String, Object> result = response.getBody();
-
-                System.out.println("📦 FastAPI 응답 전체: " + result);
-
-                // final_decision 기준으로 판단 , 추출
                 Object decision = result.get("final_decision");
                 Boolean isAbusive = decision != null && decision.toString().equals("1");
 
-                // result 객체 안의 rewritten_text 추출
                 Map<String, Object> resultInner = (Map<String, Object>) result.get("result");
                 String rewritten = resultInner != null ? (String) resultInner.get("rewritten_text") : text;
-
-                System.out.println("욕설 여부: " + isAbusive);
-                System.out.println("대체 문장: " + rewritten);
 
                 if (Boolean.TRUE.equals(isAbusive)) {
                     BadwordLogEntity log = new BadwordLogEntity();
@@ -107,6 +97,7 @@ public class PostService {
         }
         return text;
     }
+
 
 
 
@@ -225,6 +216,10 @@ public class PostService {
         post.setTitle(getFilteredText(request.getTitle(), user, post));
         post.setContent(getFilteredText(request.getContent(), user, post));
         post.setUpdatedAt(LocalDateTime.now());
+        System.out.println("🔵 jsonBody 생성 내용: " + jsonBody);
+        System.out.println("🔵 JWT: " + serverJwt);
+        System.out.println("🔵 요청 보내는 최종 entity: " + entity);
+
 
         PostEntity updatedPost = postRepository.save(post);
 
@@ -239,6 +234,7 @@ public class PostService {
         if (user.getLimits() != null) {
             isActive = user.getLimits().getIsActive();
         }
+
 
         return PostDto.Response.builder()
                 .postId(updatedPost.getPostId())

@@ -40,15 +40,13 @@ public class CommentService {
             Map<String, String> body = new HashMap<>();
             body.put("text", text);
 
-            // JWT 생성
             String jsonBody = serverToProxyJwtService.createJsonBody(body);
             String serverJwt = serverToProxyJwtService.generateTokenFromJson(jsonBody);
 
-            // 헤더 설정
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.set("Authorization", "Bearer " + clientApiKey); // 클라이언트 API Key
-            headers.set("X-Auth-Token", serverJwt);                 // 서버-프록시 JWT
+            headers.set("Authorization", "Bearer " + clientApiKey);
+            headers.set("X-Auth-Token", serverJwt);
 
             HttpEntity<String> entity = new HttpEntity<>(jsonBody, headers);
 
@@ -58,7 +56,6 @@ public class CommentService {
 
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
                 Map<String, Object> result = response.getBody();
-
                 Object decision = result.get("final_decision");
                 Boolean isAbusive = decision != null && decision.toString().equals("1");
 
@@ -66,7 +63,7 @@ public class CommentService {
                 String rewritten = resultInner != null ? (String) resultInner.get("rewritten_text") : text;
 
                 if (Boolean.TRUE.equals(isAbusive)) {
-                    if (comment != null) { // comment가 있을 때만 로그 저장
+                    if (comment != null) {
                         BadwordLogEntity log = new BadwordLogEntity();
                         log.setUser(user);
                         log.setPost(post);
@@ -77,16 +74,16 @@ public class CommentService {
                         badwordLogRepository.save(log);
                     }
 
-                    userService.applyPenalty(user.getUserId()); // 패널티는 항상 적용
+                    userService.applyPenalty(user.getUserId());
                     return rewritten;
                 }
-
             }
         } catch (Exception e) {
             System.out.println("❌ 욕설 분석 실패: " + e.getMessage());
         }
         return text;
     }
+
 
     // 댓글 조회
     public List<CommentDto.CommentResponse> getCommentsByPostId(int postId) {
@@ -122,16 +119,14 @@ public class CommentService {
 
         // 댓글 엔티티 생성 및 저장 (commentId 확보용)
         CommentEntity comment = new CommentEntity();
-        comment.setUser(user);
-        comment.setPost(post);
-        comment.setCreatedAt(LocalDateTime.now());
-        comment.setUpdatedAt(LocalDateTime.now());
-        comment.setContent("임시"); // placeholder
-        comment = commentRepository.save(comment); // save() 후 ID 생성됨
+        comment.setContent("임시"); // commentId 확보
+        comment = commentRepository.save(comment);
 
         // 3욕설 필터링 + 로그 저장 (이제 comment를 넘길 수 있음)
         String refined = getFilteredText(commentRequest.getContent(), user, post, comment);
         comment.setContent(refined);
+        // save() 후 ID 생성됨
+        commentRepository.save(comment);
 
         // 최종 저장
         commentRepository.save(comment);
